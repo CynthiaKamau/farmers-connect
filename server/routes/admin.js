@@ -1,0 +1,49 @@
+const express = require("express");
+const { authMiddleware, adminOnly } = require("../middleware/auth");
+const Farmer = require("../models/Farmer");
+const User = require("../models/User");
+
+const router = express.Router();
+
+// List all farmers
+router.get("/farmers", authMiddleware, adminOnly, async (req, res) => {
+  try {
+    const farmers = await Farmer.findAll({
+      include: {
+        model: User,
+        as: "user",
+        attributes: ["id", "name", "email", "phoneNumber"],
+      },
+    });
+    res.json(farmers);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
+
+// Update status
+router.post(
+  "/farmers/:id/status",
+  authMiddleware,
+  adminOnly,
+  async (req, res) => {
+    try {
+      const { status } = req.body; // pending, certified, declined
+      const { id } = req.params;
+      if (!["pending", "certified", "declined"].includes(status)) {
+        return res.status(400).json({ message: "Invalid status" });
+      }
+      const farmer = await Farmer.findByPk(id);
+      if (!farmer) return res.status(404).json({ message: "Farmer not found" });
+      farmer.registrationStatus = status;
+      await farmer.save();
+      res.json({ message: "Status updated", farmer });
+    } catch (err) {
+      console.error(err);
+      res.status(500).json({ message: "Server error" });
+    }
+  }
+);
+
+module.exports = router;

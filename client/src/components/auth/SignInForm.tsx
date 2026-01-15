@@ -45,8 +45,8 @@ export default function SignInForm() {
       setAuthToken(response.token);
 
       // Redirect based on role
-      if (response.role === "admin") {
-        router.push("/admin");
+      if (response.role === "Admin") {
+        router.push("/");
       } else {
         router.push("/farmers");
       }

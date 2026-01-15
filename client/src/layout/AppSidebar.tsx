@@ -1,41 +1,44 @@
 "use client";
-import React, { useEffect, useRef, useState,useCallback } from "react";
+import React, { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { useSidebar } from "../context/SidebarContext";
+import { useAuth } from "../hooks/useAuth";
 import {
   BoxCubeIcon,
-  CalenderIcon,
   ChevronDownIcon,
   GridIcon,
   HorizontaLDots,
-  ListIcon,
-  PageIcon,
-  PieChartIcon,
-  PlugInIcon,
-  TableIcon,
   UserCircleIcon,
 } from "../icons/index";
-import SidebarWidget from "./SidebarWidget";
 
 type NavItem = {
   name: string;
   icon: React.ReactNode;
   path?: string;
-  subItems?: { name: string; path: string; pro?: boolean; new?: boolean }[];
+  roles?: string[]; // Roles that can see this item
+  subItems?: { name: string; path: string; pro?: boolean; new?: boolean; roles?: string[] }[];
 };
 
 const navItems: NavItem[] = [
   {
     icon: <GridIcon />,
-    name: "Dashboard",
-    subItems: [{ name: "Ecommerce", path: "/", pro: false }],
+    name: "Reports",
+    path: "/",
+    roles: ["Admin"], // Only visible to Admin
   },
   {
     icon: <BoxCubeIcon />,
-    name: "Farmers",
-    path: "/admin/farmers", 
+    name: "Manage Farmers",
+    path: "/admin/farmers",
+    roles: ["Admin"], // Only visible to Admin
+  },
+  {
+    icon: <BoxCubeIcon />,
+    name: "My Farm",
+    path: "/farmers",
+    roles: ["Farmer"], // Only visible to Farmer
   }
 ];
 
@@ -49,7 +52,25 @@ const othersItems: NavItem[] = [
 
 const AppSidebar: React.FC = () => {
   const { isExpanded, isMobileOpen, isHovered, setIsHovered } = useSidebar();
+  const { role } = useAuth();
   const pathname = usePathname();
+
+  // Filter nav items based on user role
+  const filteredNavItems = useMemo(() => {
+    return navItems.filter((item) => {
+      // If no roles specified, show to everyone
+      if (!item.roles || item.roles.length === 0) return true;
+      // Otherwise, check if user's role is in the allowed roles
+      return role && item.roles.includes(role);
+    });
+  }, [role]);
+
+  const filteredOthersItems = useMemo(() => {
+    return othersItems.filter((item) => {
+      if (!item.roles || item.roles.length === 0) return true;
+      return role && item.roles.includes(role);
+    });
+  }, [role]);
 
   const renderMenuItems = (
     navItems: NavItem[],
@@ -193,7 +214,7 @@ const AppSidebar: React.FC = () => {
     // Check if the current path matches any submenu item
     let submenuMatched = false;
     ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? navItems : othersItems;
+      const items = menuType === "main" ? filteredNavItems : filteredOthersItems;
       items.forEach((nav, index) => {
         if (nav.subItems) {
           nav.subItems.forEach((subItem) => {
@@ -213,7 +234,7 @@ const AppSidebar: React.FC = () => {
     if (!submenuMatched) {
       setOpenSubmenu(null);
     }
-  }, [pathname,isActive]);
+  }, [pathname, isActive, filteredNavItems, filteredOthersItems]);
 
   useEffect(() => {
     // Set the height of the submenu items when the submenu is opened
@@ -257,23 +278,21 @@ const AppSidebar: React.FC = () => {
       onMouseLeave={() => setIsHovered(false)}
     >
       <div
-        className={`py-8 flex  ${
-          !isExpanded && !isHovered ? "lg:justify-center" : "justify-start"
-        }`}
+        className={`py-8 flex justify-center`}
       >
         <Link href="/">
           {isExpanded || isHovered || isMobileOpen ? (
             <>
               <Image
                 className="dark:hidden"
-                src="/images/logo/logo.svg"
+                src="/images/logo/farm-connect.png"
                 alt="Logo"
                 width={150}
                 height={40}
               />
               <Image
                 className="hidden dark:block"
-                src="/images/logo/logo-dark.svg"
+                src="/images/logo/farm-connect.png"
                 alt="Logo"
                 width={150}
                 height={40}
@@ -281,7 +300,7 @@ const AppSidebar: React.FC = () => {
             </>
           ) : (
             <Image
-              src="/images/logo/logo-icon.svg"
+              src="/images/logo/farm-connect.png"
               alt="Logo"
               width={32}
               height={32}
@@ -306,7 +325,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(navItems, "main")}
+              {renderMenuItems(filteredNavItems, "main")}
             </div>
 
             <div className="">
@@ -323,7 +342,7 @@ const AppSidebar: React.FC = () => {
                   <HorizontaLDots />
                 )}
               </h2>
-              {renderMenuItems(othersItems, "others")}
+              {renderMenuItems(filteredOthersItems, "others")}
             </div>
           </div>
         </nav>

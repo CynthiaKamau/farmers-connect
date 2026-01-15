@@ -16,14 +16,14 @@ function authMiddleware(req, res, next) {
 }
 
 function adminOnly(req, res, next) {
-  if (!req.user || req.user.role !== "admin") {
+  if (!req.user || req.user.role !== "Admin") {
     return res.status(403).json({ message: "Forbidden: Admins only" });
   }
   next();
 }
 
 function farmerOnly(req, res, next) {
-  if (!req.user || req.user.role !== "farmer") {
+  if (!req.user || req.user.role !== "Farmer") {
     return res.status(403).json({ message: "Forbidden: Farmers only" });
   }
   next();

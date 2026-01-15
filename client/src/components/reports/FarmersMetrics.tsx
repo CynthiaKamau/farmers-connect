@@ -1,7 +1,7 @@
 "use client";
 import React, { useEffect, useState } from "react";
 import Badge from "../ui/badge/Badge";
-import { BoxIconLine, GroupIcon, InfoIcon, ClockIcon } from "@/icons";
+import { BoxIconLine, GroupIcon, InfoIcon } from "@/icons";
 import { getAuthToken } from "@/lib/cookies";
 
 interface FarmerStats {

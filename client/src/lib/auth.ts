@@ -24,6 +24,9 @@ export async function register(data: {
   farmLocation?: string;
   farmSize?: string;
   cropsPlanted?: string[];
+  farmLatitude?: number | null;
+  farmLongitude?: number | null;
+  termsAccepted?: boolean;
 }) {
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: "POST",

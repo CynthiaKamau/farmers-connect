@@ -8,9 +8,9 @@ import { ChevronDownIcon } from "@/icons";
 
 export default function SelectInputs() {
   const options = [
-    { value: "marketing", label: "Marketing" },
-    { value: "template", label: "Template" },
-    { value: "development", label: "Development" },
+    { id: "marketing", name: "Marketing" },
+    { id: "template", name: "Template" },
+    { id: "development", name: "Development" },
   ];
 
   const [selectedValues, setSelectedValues] = useState<string[]>([]);
@@ -34,6 +34,7 @@ export default function SelectInputs() {
           <Label>Select Input</Label>
          <div className="relative">
            <Select
+           id="single-select-input"
             options={options}
             placeholder="Select Option"
             onChange={handleSelectChange}

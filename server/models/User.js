@@ -21,6 +21,7 @@ const User = sequelize.define(
     phoneNumber: { type: DataTypes.STRING(30) },
     roleId: { type: DataTypes.UUID, allowNull: false },
     password: { type: DataTypes.STRING(120), allowNull: false },
+    termsAccepted: { type: DataTypes.BOOLEAN, defaultValue: false },
   },
   {
     tableName: "users",

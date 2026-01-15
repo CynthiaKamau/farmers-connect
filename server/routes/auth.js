@@ -17,10 +17,13 @@ router.post("/register", async (req, res) => {
       phoneNumber,
       farmName,
       farmLocation,
+      farmLatitude,
+      farmLongitude,
       farmSize,
       cropsPlanted,
       password,
       roleId,
+      termsAccepted,
     } = req.body;
     if (!firstName || !lastName || !email || !password) {
       return res
@@ -33,17 +36,22 @@ router.post("/register", async (req, res) => {
 
     // Determine roleId: use provided roleId or default to farmer
     let finalRoleId = roleId;
+    let roleName = "";
+
     if (!finalRoleId) {
-      const farmerRole = await Role.findOne({ where: { name: "farmer" } });
+      // No roleId provided, default to Farmer role
+      const farmerRole = await Role.findOne({ where: { name: "Farmer" } });
       if (!farmerRole)
         return res
           .status(500)
           .json({ message: "Farmer role not found. Run seed." });
       finalRoleId = farmerRole.id;
+      roleName = farmerRole.name;
     } else {
       // Validate that the provided roleId exists
       const role = await Role.findByPk(finalRoleId);
       if (!role) return res.status(400).json({ message: "Invalid roleId" });
+      roleName = role.name;
     }
 
     const hashedPassword = await bcrypt.hash(password, 10);
@@ -54,18 +62,17 @@ router.post("/register", async (req, res) => {
       phoneNumber,
       password: hashedPassword,
       roleId: finalRoleId,
+      termsAccepted: termsAccepted || false,
     });
 
-    // Get role name for token
-    const userRole = await Role.findByPk(finalRoleId);
-    const roleName = userRole?.name || "farmer";
-
-    // Only create Farmer record if role is farmer
-    if (roleName === "farmer") {
+    // Only create Farmer record if role is Farmer
+    if (roleName === "Farmer") {
       await Farmer.create({
         userId: user.id,
         farmName: farmName || null,
         farmLocation: farmLocation || null,
+        farmLatitude: farmLatitude || null,
+        farmLongitude: farmLongitude || null,
         farmSize: farmSize || null,
         cropsPlanted: Array.isArray(cropsPlanted)
           ? cropsPlanted

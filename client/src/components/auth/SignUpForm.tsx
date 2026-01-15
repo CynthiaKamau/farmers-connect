@@ -4,21 +4,26 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
-import { register } from "@/lib/auth";
+import { getRoles, register } from "@/lib/auth";
 import { useRouter } from "next/navigation";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
+import Select from "../form/Select";
+import LocationInput from "../form/LocationInput";
 
 const signUpSchema = z.object({
   firstName: z.string().min(1, "First name is required"),
   lastName: z.string().min(1, "Last name is required"),
   email: z.string().email("Please enter a valid email"),
   phoneNumber: z.string().optional(),
+  roleId: z.string().min(1, "Role is required"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   farmName: z.string().min(1, "Farm name is required"),
   farmLocation: z.string().min(1, "Farm location is required"),
+  farmLatitude: z.number().nullable().optional(),
+  farmLongitude: z.number().nullable().optional(),
   farmSize: z.string().min(1, "Farm size is required"),
   cropsPlanted: z.string().min(1, "Please enter at least one crop"),
   termsAccepted: z.boolean().refine((val) => val === true, {
@@ -32,12 +37,30 @@ export default function SignUpForm() {
   const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
   const [apiError, setApiError] = useState("");
+  const [roles, setRoles] = useState<Array<{ id: string; name: string }>>([]);
+  const [error, setError] = useState("");
+
+   useEffect(() => {  
+      async function loadData() {
+        try {
+          const rolesData = await getRoles();
+          setRoles(rolesData);
+        } catch (err) {
+          setError(
+            err instanceof Error ? err.message : "Failed to load data"
+          );
+        }
+      }
+  
+      loadData();
+    }, []);
 
   const {
     register: registerField,
     handleSubmit,
     formState: { errors, isSubmitting },
     watch,
+    setValue,
   } = useForm<SignUpFormData>({
     resolver: zodResolver(signUpSchema),
   });
@@ -56,11 +79,15 @@ export default function SignUpForm() {
         lastName: data.lastName,
         email: data.email,
         phoneNumber: data.phoneNumber || "",
+        roleId: data.roleId,
         password: data.password,
         farmName: data.farmName,
         farmLocation: data.farmLocation,
+        farmLatitude: data.farmLatitude || null,
+        farmLongitude: data.farmLongitude || null,
         farmSize: data.farmSize,
         cropsPlanted: crops,
+        termsAccepted: data.termsAccepted,
       });
 
       router.push("/signin?registered=true");
@@ -68,7 +95,7 @@ export default function SignUpForm() {
       setApiError(err instanceof Error ? err.message : "Registration failed");
     }
   };
-  
+
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -218,34 +245,31 @@ export default function SignUpForm() {
                     </p>
                   )}
                 </div>
-                {/* <!-- Password --> */}
+                {/* <!-- Role --> */}
                 <div>
                   <Label>
-                    Password<span className="text-error-500">*</span>
+                    Role<span className="text-error-500">*</span>
                   </Label>
-                  <div className="relative">
-                    <Input
-                      placeholder="Enter your password"
-                      type={showPassword ? "text" : "password"}
-                      id="password"
-                      {...registerField("password")}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
-                    >
-                      {showPassword ? "Hide" : "Show"}
-                    </button>
-                  </div>
-                  {errors.password && (
+                  <Select
+                    id="roleId"
+                    options={roles}
+                    placeholder="Select a role"
+                    onChange={(value) => setValue("roleId", value)}
+                  />
+                  {errors.roleId && (
                     <p className="mt-1 text-sm text-red-600 dark:text-red-400">
-                      {errors.password.message}
+                      {errors.roleId.message}
                     </p>
                   )}
                 </div>
 
-                {/* <!-- Farm Information --> */}
+                {/* <!-- Farm Information - Show only for Farmer role --> */}
+                {(() => {
+                  const selectedRoleId = watch("roleId");
+                  console.log("Selected Role ID:", selectedRoleId);
+                  const selectedRole = roles.find((r) => r.id === selectedRoleId);
+                  return selectedRole?.name === "Farmer";
+                })() && (
                 <div className="border-t pt-5 mt-5">
                   <h3 className="font-semibold text-gray-800 dark:text-white/90 mb-4">
                     Farm Information
@@ -269,20 +293,28 @@ export default function SignUpForm() {
                     )}
                   </div>
 
-                  {/* <!-- Farm Location --> */}
+                  {/* <!-- Farm Location with Google Maps Autocomplete --> */}
                   <div className="mb-5">
                     <Label>
                       Farm Location<span className="text-error-500">*</span>
                     </Label>
-                    <Input
-                      type="text"
+                    <LocationInput
                       id="farmLocation"
-                      placeholder="Enter your farm location"
-                      {...registerField("farmLocation")}
+                      placeholder="Search for your farm location"
+                      onChange={(location) => {
+                        setValue("farmLocation", location.address);
+                        setValue("farmLatitude", location.latitude);
+                        setValue("farmLongitude", location.longitude);
+                      }}
                     />
                     {errors.farmLocation && (
                       <p className="mt-1 text-sm text-red-600 dark:text-red-400">
                         {errors.farmLocation.message}
+                      </p>
+                    )}
+                    {watch("farmLatitude") && watch("farmLongitude") && (
+                      <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                        📍 Coordinates: {watch("farmLatitude")?.toFixed(6)}, {watch("farmLongitude")?.toFixed(6)}
                       </p>
                     )}
                   </div>
@@ -290,7 +322,7 @@ export default function SignUpForm() {
                   {/* <!-- Farm Size --> */}
                   <div className="mb-5">
                     <Label>
-                      Farm Size<span className="text-error-500">*</span>
+                      Farm Size In Acres<span className="text-error-500">*</span>
                     </Label>
                     <Input
                       type="text"
@@ -322,6 +354,33 @@ export default function SignUpForm() {
                       </p>
                     )}
                   </div>
+                </div>)}
+
+                 {/* <!-- Password --> */}
+                <div>
+                  <Label>
+                    Password<span className="text-error-500">*</span>
+                  </Label>
+                  <div className="relative">
+                    <Input
+                      placeholder="Enter your password"
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      {...registerField("password")}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                    >
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.password.message}
+                    </p>
+                  )}
                 </div>
 
                 {/* <!-- Checkbox --> */}

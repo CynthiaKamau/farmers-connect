@@ -8,14 +8,14 @@ module.exports = {
       [
         {
           id: Sequelize.literal("(UUID())"),
-          name: "admin",
+          name: "Admin",
           description: "admin role",
           createdAt: now,
           updatedAt: now,
         },
         {
           id: Sequelize.literal("(UUID())"),
-          name: "farmer",
+          name: "Farmer",
           description: "farmer role",
           createdAt: now,
           updatedAt: now,

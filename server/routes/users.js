@@ -2,8 +2,20 @@ const express = require("express");
 const { authMiddleware } = require("../middleware/auth");
 const User = require("../models/User");
 const Farmer = require("../models/Farmer");
+const Role = require("../models/Role");
 
 const router = express.Router();
+
+// Get all user roles (public - needed for registration)
+router.get("/roles", async (req, res) => {
+  try {
+    const roles = await Role.findAll({ attributes: ["id", "name"] });
+    res.json(roles);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ message: "Server error" });
+  }
+});
 
 // Get current user profile
 router.get("/profile", authMiddleware, async (req, res) => {

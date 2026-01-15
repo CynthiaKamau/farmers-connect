@@ -13,6 +13,8 @@ const Farmer = sequelize.define(
     userId: { type: DataTypes.UUID, allowNull: false },
     farmName: { type: DataTypes.STRING(150) },
     farmLocation: { type: DataTypes.STRING(200) },
+    farmLatitude: { type: DataTypes.DECIMAL(10, 8), allowNull: true },
+    farmLongitude: { type: DataTypes.DECIMAL(11, 8), allowNull: true },
     registrationStatus: {
       type: DataTypes.ENUM("pending", "certified", "declined"),
       defaultValue: "pending",

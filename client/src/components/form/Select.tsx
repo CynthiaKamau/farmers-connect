@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 
 interface Option {
-  value: string;
-  label: string;
+  id: string;
+  name: string;
 }
 
 interface SelectProps {
@@ -11,6 +11,7 @@ interface SelectProps {
   onChange: (value: string) => void;
   className?: string;
   defaultValue?: string;
+  id: string,
 }
 
 const Select: React.FC<SelectProps> = ({
@@ -19,6 +20,7 @@ const Select: React.FC<SelectProps> = ({
   onChange,
   className = "",
   defaultValue = "",
+  id,
 }) => {
   // Manage the selected value
   const [selectedValue, setSelectedValue] = useState<string>(defaultValue);
@@ -38,6 +40,7 @@ const Select: React.FC<SelectProps> = ({
       } ${className}`}
       value={selectedValue}
       onChange={handleChange}
+      id={id}
     >
       {/* Placeholder option */}
       <option
@@ -50,11 +53,11 @@ const Select: React.FC<SelectProps> = ({
       {/* Map over options */}
       {options.map((option) => (
         <option
-          key={option.value}
-          value={option.value}
+          key={option.id}
+          value={option.id}
           className="text-gray-700 dark:bg-gray-900 dark:text-gray-400"
         >
-          {option.label}
+          {option.name}
         </option>
       ))}
     </select>

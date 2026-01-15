@@ -17,13 +17,13 @@ export async function register(data: {
   firstName: string;
   lastName: string;
   email: string;
+  roleId: string;
   phoneNumber?: string;
   password: string;
   farmName?: string;
   farmLocation?: string;
   farmSize?: string;
   cropsPlanted?: string[];
-  roleId?: string;
 }) {
   const res = await fetch(`${API_BASE}/auth/register`, {
     method: "POST",
@@ -78,6 +78,13 @@ export async function updateFarmerStatus(
       Authorization: `Bearer ${authToken}`,
     },
     body: JSON.stringify({ status }),
+  });
+  return res.json();
+}
+
+export async function getRoles() {
+  const res = await fetch(`${API_BASE}/users/roles`, {
+    headers: { "Content-Type": "application/json" },
   });
   return res.json();
 }

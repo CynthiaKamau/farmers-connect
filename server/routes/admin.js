@@ -12,7 +12,7 @@ router.get("/farmers", authMiddleware, adminOnly, async (req, res) => {
       include: {
         model: User,
         as: "user",
-        attributes: ["id", "name", "email", "phoneNumber"],
+        attributes: ["id", "firstName", "lastName", "email", "phoneNumber"],
       },
     });
     res.json(farmers);

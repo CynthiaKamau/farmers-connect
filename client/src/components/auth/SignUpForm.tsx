@@ -4,11 +4,71 @@ import Input from "@/components/form/input/InputField";
 import Label from "@/components/form/Label";
 import { ChevronLeftIcon, EyeCloseIcon, EyeIcon } from "@/icons";
 import Link from "next/link";
+import { register } from "@/lib/auth";
+import { useRouter } from "next/navigation";
 import React, { useState } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { z } from "zod";
+
+const signUpSchema = z.object({
+  firstName: z.string().min(1, "First name is required"),
+  lastName: z.string().min(1, "Last name is required"),
+  email: z.string().email("Please enter a valid email"),
+  phoneNumber: z.string().optional(),
+  password: z.string().min(6, "Password must be at least 6 characters"),
+  farmName: z.string().min(1, "Farm name is required"),
+  farmLocation: z.string().min(1, "Farm location is required"),
+  farmSize: z.string().min(1, "Farm size is required"),
+  cropsPlanted: z.string().min(1, "Please enter at least one crop"),
+  termsAccepted: z.boolean().refine((val) => val === true, {
+    message: "You must agree to the terms and conditions",
+  }),
+});
+
+type SignUpFormData = z.infer<typeof signUpSchema>;
 
 export default function SignUpForm() {
+  const router = useRouter();
   const [showPassword, setShowPassword] = useState(false);
-  const [isChecked, setIsChecked] = useState(false);
+  const [apiError, setApiError] = useState("");
+
+  const {
+    register: registerField,
+    handleSubmit,
+    formState: { errors, isSubmitting },
+    watch,
+  } = useForm<SignUpFormData>({
+    resolver: zodResolver(signUpSchema),
+  });
+
+  const onSubmit = async (data: SignUpFormData) => {
+    setApiError("");
+
+    try {
+      const crops = data.cropsPlanted
+        .split(",")
+        .map((crop) => crop.trim())
+        .filter((crop) => crop);
+
+      await register({
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        phoneNumber: data.phoneNumber || "",
+        password: data.password,
+        farmName: data.farmName,
+        farmLocation: data.farmLocation,
+        farmSize: data.farmSize,
+        cropsPlanted: crops,
+      });
+
+      router.push("/signin?registered=true");
+    } catch (err) {
+      setApiError(err instanceof Error ? err.message : "Registration failed");
+    }
+  };
+  
   return (
     <div className="flex flex-col flex-1 lg:w-1/2 w-full overflow-y-auto no-scrollbar">
       <div className="w-full max-w-md sm:pt-10 mx-auto mb-5">
@@ -83,8 +143,13 @@ export default function SignUpForm() {
                 </span>
               </div>
             </div>
-            <form>
+            <form onSubmit={handleSubmit(onSubmit)}>
               <div className="space-y-5">
+                {apiError && (
+                  <div className="p-3 rounded bg-red-50 text-red-700 text-sm">
+                    {apiError}
+                  </div>
+                )}
                 <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
                   {/* <!-- First Name --> */}
                   <div className="sm:col-span-1">
@@ -93,10 +158,15 @@ export default function SignUpForm() {
                     </Label>
                     <Input
                       type="text"
-                      id="fname"
-                      name="fname"
+                      id="firstName"
                       placeholder="Enter your first name"
+                      {...registerField("firstName")}
                     />
+                    {errors.firstName && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.firstName.message}
+                      </p>
+                    )}
                   </div>
                   {/* <!-- Last Name --> */}
                   <div className="sm:col-span-1">
@@ -105,10 +175,15 @@ export default function SignUpForm() {
                     </Label>
                     <Input
                       type="text"
-                      id="lname"
-                      name="lname"
+                      id="lastName"
                       placeholder="Enter your last name"
+                      {...registerField("lastName")}
                     />
+                    {errors.lastName && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.lastName.message}
+                      </p>
+                    )}
                   </div>
                 </div>
                 {/* <!-- Email --> */}
@@ -119,9 +194,29 @@ export default function SignUpForm() {
                   <Input
                     type="email"
                     id="email"
-                    name="email"
                     placeholder="Enter your email"
+                    {...registerField("email")}
                   />
+                  {errors.email && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
+                {/* <!-- Phone Number --> */}
+                <div>
+                  <Label>Phone Number</Label>
+                  <Input
+                    type="tel"
+                    id="phoneNumber"
+                    placeholder="Enter your phone number"
+                    {...registerField("phoneNumber")}
+                  />
+                  {errors.phoneNumber && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.phoneNumber.message}
+                    </p>
+                  )}
                 </div>
                 {/* <!-- Password --> */}
                 <div>
@@ -132,27 +227,112 @@ export default function SignUpForm() {
                     <Input
                       placeholder="Enter your password"
                       type={showPassword ? "text" : "password"}
+                      id="password"
+                      {...registerField("password")}
                     />
-                    <span
+                    <button
+                      type="button"
                       onClick={() => setShowPassword(!showPassword)}
-                      className="absolute z-30 -translate-y-1/2 cursor-pointer right-4 top-1/2"
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
                     >
-                      {showPassword ? (
-                        <EyeIcon className="fill-gray-500 dark:fill-gray-400" />
-                      ) : (
-                        <EyeCloseIcon className="fill-gray-500 dark:fill-gray-400" />
-                      )}
-                    </span>
+                      {showPassword ? "Hide" : "Show"}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* <!-- Farm Information --> */}
+                <div className="border-t pt-5 mt-5">
+                  <h3 className="font-semibold text-gray-800 dark:text-white/90 mb-4">
+                    Farm Information
+                  </h3>
+
+                  {/* <!-- Farm Name --> */}
+                  <div className="mb-5">
+                    <Label>
+                      Farm Name<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      id="farmName"
+                      placeholder="Enter your farm name"
+                      {...registerField("farmName")}
+                    />
+                    {errors.farmName && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.farmName.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* <!-- Farm Location --> */}
+                  <div className="mb-5">
+                    <Label>
+                      Farm Location<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      id="farmLocation"
+                      placeholder="Enter your farm location"
+                      {...registerField("farmLocation")}
+                    />
+                    {errors.farmLocation && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.farmLocation.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* <!-- Farm Size --> */}
+                  <div className="mb-5">
+                    <Label>
+                      Farm Size<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      id="farmSize"
+                      placeholder="e.g., 10 acres"
+                      {...registerField("farmSize")}
+                    />
+                    {errors.farmSize && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.farmSize.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* <!-- Crops Planted --> */}
+                  <div>
+                    <Label>
+                      Crops Planted<span className="text-error-500">*</span>
+                    </Label>
+                    <Input
+                      type="text"
+                      id="cropsPlanted"
+                      placeholder="e.g., Corn, Beans, Wheat (comma-separated)"
+                      {...registerField("cropsPlanted")}
+                    />
+                    {errors.cropsPlanted && (
+                      <p className="mt-1 text-sm text-red-600 dark:text-red-400">
+                        {errors.cropsPlanted.message}
+                      </p>
+                    )}
                   </div>
                 </div>
+
                 {/* <!-- Checkbox --> */}
-                <div className="flex items-center gap-3">
-                  <Checkbox
-                    className="w-5 h-5"
-                    checked={isChecked}
-                    onChange={setIsChecked}
+                <div className="flex items-start gap-3">
+                  <input
+                    type="checkbox"
+                    id="termsAccepted"
+                    className="w-5 h-5 mt-1 rounded border-gray-300"
+                    {...registerField("termsAccepted")}
                   />
-                  <p className="inline-block font-normal text-gray-500 dark:text-gray-400">
+                  <label htmlFor="termsAccepted" className="font-normal text-gray-500 dark:text-gray-400 text-sm">
                     By creating an account means you agree to the{" "}
                     <span className="text-gray-800 dark:text-white/90">
                       Terms and Conditions,
@@ -161,12 +341,21 @@ export default function SignUpForm() {
                     <span className="text-gray-800 dark:text-white">
                       Privacy Policy
                     </span>
-                  </p>
+                  </label>
                 </div>
+                {errors.termsAccepted && (
+                  <p className="text-sm text-red-600 dark:text-red-400">
+                    {errors.termsAccepted.message}
+                  </p>
+                )}
                 {/* <!-- Button --> */}
                 <div>
-                  <button className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600">
-                    Sign Up
+                  <button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="flex items-center justify-center w-full px-4 py-3 text-sm font-medium text-white transition rounded-lg bg-brand-500 shadow-theme-xs hover:bg-brand-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {isSubmitting ? "Creating Account..." : "Sign Up"}
                   </button>
                 </div>
               </div>

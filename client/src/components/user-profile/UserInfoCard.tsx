@@ -1,18 +1,45 @@
 "use client";
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useModal } from "../../hooks/useModal";
 import { Modal } from "../ui/modal";
 import Button from "../ui/button/Button";
 import Input from "../form/input/InputField";
 import Label from "../form/Label";
+import { getProfile } from "@/lib/auth";
+import { useAuth } from "@/hooks/useAuth";
+
+interface UserProfile {
+  firstName: string;
+  lastName: string;
+  email: string;
+  phoneNumber?: string;
+  role?: { name: string };
+}
 
 export default function UserInfoCard() {
   const { isOpen, openModal, closeModal } = useModal();
+  const { token } = useAuth();
+  const [profile, setProfile] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    if (!token) return;
+    async function loadProfile() {
+      try {
+        const data = await getProfile();
+        setProfile(data);
+      } catch (err) {
+        console.error("Failed to load profile", err);
+      }
+    }
+    loadProfile();
+  }, [token]);
+
   const handleSave = () => {
     // Handle save logic here
     console.log("Saving changes...");
     closeModal();
   };
+
   return (
     <div className="p-5 border border-gray-200 rounded-2xl dark:border-gray-800 lg:p-6">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-start lg:justify-between">
@@ -27,7 +54,7 @@ export default function UserInfoCard() {
                 First Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Musharof
+                {profile?.firstName || "-"}
               </p>
             </div>
 
@@ -36,7 +63,7 @@ export default function UserInfoCard() {
                 Last Name
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Chowdhury
+                {profile?.lastName || "-"}
               </p>
             </div>
 
@@ -45,7 +72,7 @@ export default function UserInfoCard() {
                 Email address
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                randomuser@pimjo.com
+                {profile?.email || "-"}
               </p>
             </div>
 
@@ -54,16 +81,16 @@ export default function UserInfoCard() {
                 Phone
               </p>
               <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                +09 363 398 46
+                {profile?.phoneNumber || "-"}
               </p>
             </div>
 
             <div>
               <p className="mb-2 text-xs leading-normal text-gray-500 dark:text-gray-400">
-                Bio
+                Role
               </p>
-              <p className="text-sm font-medium text-gray-800 dark:text-white/90">
-                Team Manager
+              <p className="text-sm font-medium text-gray-800 dark:text-white/90 capitalize">
+                {profile?.role?.name || "-"}
               </p>
             </div>
           </div>

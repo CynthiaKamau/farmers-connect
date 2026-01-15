@@ -14,7 +14,6 @@ async function seed() {
         where: { name: r },
         defaults: { description: `${r} role` },
       });
-      console.log("Ensured role:", role.name);
     }
 
     const adminRole = await Role.findOne({ where: { name: "admin" } });
@@ -31,7 +30,6 @@ async function seed() {
         passwordHash,
         roleId: adminRole.id,
       });
-      console.log("Created admin user:", adminUser.email);
     } else {
       console.log("Admin already exists:", existingAdmin.email);
     }

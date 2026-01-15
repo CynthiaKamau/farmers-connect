@@ -41,7 +41,7 @@ Server runs on `http://localhost:3000`.
 
 - POST `/api/auth/register` – Register farmer
 - POST `/api/auth/login` – Login, returns `{ token, role }`
-- GET `/api/farmers/me` – Get current farmer record (requires `Authorization: Bearer <token>`)
+- GET `/api/farmers/profile` – Get current farmer record (requires `Authorization: Bearer <token>`)
 - GET `/api/admin/farmers` – List farmers (admin only)
 - POST `/api/admin/farmers/:id/status` – Update status to `pending|certified|declined` (admin only)
 

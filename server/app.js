@@ -1,5 +1,4 @@
 const express = require("express");
-const path = require("path");
 const cors = require("cors");
 const dotenv = require("dotenv");
 dotenv.config();
@@ -12,23 +11,23 @@ const Farmer = require("./models/Farmer");
 const authRoutes = require("./routes/auth");
 const adminRoutes = require("./routes/admin");
 const farmerRoutes = require("./routes/farmers");
+const userRoutes = require("./routes/users");
 
 const app = express();
 
 app.use(cors());
 app.use(express.json());
 
-// Serve static client files
-app.use("/client", express.static(path.join(__dirname, "../client")));
 app.get("/", (req, res) => {
   res.send("Farmers Portal API running");
 });
 
 app.use("/api/auth", authRoutes);
+app.use("/api/users", userRoutes);
 app.use("/api/admin", adminRoutes);
 app.use("/api/farmers", farmerRoutes);
 
-const port = process.env.PORT ? Number(process.env.PORT) : 3000;
+const port = process.env.PORT ? Number(process.env.PORT) : 5000;
 
 async function start() {
   try {

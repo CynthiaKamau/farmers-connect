@@ -1,6 +1,6 @@
 {
-  "name": "free-nextjs-admin-dashboard",
-  "version": "2.2.2",
+  "name": "farmers-portal-admin-dashboard",
+  "version": "1.0.0",
   "private": true,
   "scripts": {
     "dev": "next dev",
@@ -15,6 +15,7 @@
     "@fullcalendar/list": "^6.1.19",
     "@fullcalendar/react": "^6.1.19",
     "@fullcalendar/timegrid": "^6.1.19",
+    "@hookform/resolvers": "^5.2.2",
     "@react-jvectormap/core": "^1.0.4",
     "@react-jvectormap/world": "^1.1.2",
     "@tailwindcss/forms": "^0.5.10",
@@ -22,6 +23,7 @@
     "apexcharts": "^4.7.0",
     "autoprefixer": "^10.4.22",
     "flatpickr": "^4.6.13",
+    "jwt-decode": "^4.0.0",
     "next": "16.0.10",
     "react": "^19.2.0",
     "react-apexcharts": "^1.8.0",
@@ -29,8 +31,10 @@
     "react-dnd-html5-backend": "^16.0.1",
     "react-dom": "^19.2.0",
     "react-dropzone": "^14.3.8",
+    "react-hook-form": "^7.71.1",
     "swiper": "^11.2.10",
-    "tailwind-merge": "^2.6.0"
+    "tailwind-merge": "^2.6.0",
+    "zod": "^4.3.5"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3.3.1",

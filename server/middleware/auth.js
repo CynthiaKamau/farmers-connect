@@ -22,4 +22,11 @@ function adminOnly(req, res, next) {
   next();
 }
 
-module.exports = { authMiddleware, adminOnly };
+function farmerOnly(req, res, next) {
+  if (!req.user || req.user.role !== "farmer") {
+    return res.status(403).json({ message: "Forbidden: Farmers only" });
+  }
+  next();
+}
+
+module.exports = { authMiddleware, adminOnly, farmerOnly };

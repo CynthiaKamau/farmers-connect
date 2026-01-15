@@ -5,7 +5,7 @@ const Farmer = require("../models/Farmer");
 const router = express.Router();
 
 // Current farmer status
-router.get("/me", authMiddleware, async (req, res) => {
+router.get("/profile", authMiddleware, async (req, res) => {
   try {
     const farmer = await Farmer.findOne({ where: { userId: req.user.id } });
     if (!farmer)

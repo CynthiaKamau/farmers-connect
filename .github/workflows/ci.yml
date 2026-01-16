@@ -52,11 +52,11 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "20"
-          cache: "yarn"
-          cache-dependency-path: server/yarn.lock
+          cache: "npm"
+          cache-dependency-path: server/package-lock.json
 
       - name: Install dependencies
-        run: yarn install --frozen-lockfile
+        run: npm ci
 
       - name: Check syntax
         run: node --check app.js

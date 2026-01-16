@@ -1,20 +1,25 @@
 # Farmers Portal
 
-A simple portal where farmers register and admins certify or decline applications. Built with Node.js, Express, Sequelize (MySQL).
+A portal where farmers register and admins certify or decline applications. Built with Node.js, Express, Sequelize (MySQL) for the backend and Next.js for the frontend.
 
 ## Features
 
-- Farmer registration (name, contact, farm details, crop info)
-- Admin dashboard to list farmers and update certification status
-- Farmer dashboard to check current status
+- Farmer registration with Google Maps location picker (captures coordinates)
+- Role-based authentication (Farmer/Admin)
+- Admin dashboard with farmer statistics and map visualization
+- Admin can list, certify, or decline farmer applications
+- Farmer dashboard to view current certification status
 
 ## Tech Stack
 
-- Server: Express + Sequelize + MySQL
-- Auth: JWT + bcrypt
-- Client: Plain HTML + fetch
+- **Backend:** Express.js + Sequelize + MySQL
+- **Frontend:** Next.js 16 + React 19 + TailwindCSS 4 + TypeScript
+- **Auth:** JWT + bcrypt
+- **Maps:** Google Maps API (Places Autocomplete + Markers)
 
 ## Setup
+
+### Backend
 
 1. Create a MySQL database named `farmers_portal` (or set `DB_NAME` in `.env`).
 2. Copy `server/.env.example` to `server/.env` and adjust values.
@@ -22,31 +27,102 @@ A simple portal where farmers register and admins certify or decline application
 
 ```bash
 cd server
-npm install
-npx sequelize db:migrate
-npx sequelize db:seed:all
-npm run start
+
+yarn install
+yarn db:migrate
+yarn db:seed
+yarn dev
 ```
 
-Server runs on `http://localhost:3000`.
+Server runs on `http://localhost:5001`.
 
-## Try it
+### Frontend
 
-- Open `client/index.html` to register a farmer.
-- Login at `client/login.html`.
-- Admin users are created by the seed script (`ADMIN_EMAIL`/`ADMIN_PASSWORD`). After login as admin, open `client/admin.html`.
-- Farmers can view their status at `client/dashboard.html`.
+1. Copy `client/.env.example` to `client/.env.local` and set:
+
+   - `NEXT_PUBLIC_API_URL=http://localhost:5001`
+   - `NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key`
+
+2. Install and run:
+
+```bash
+cd client
+yarn install
+yarn dev
+```
+
+Client runs on `http://localhost:3000`.
 
 ## API Endpoints
 
-- POST `/api/auth/register` – Register farmer
-- POST `/api/auth/login` – Login, returns `{ token, role }`
-- GET `/api/farmers/profile` – Get current farmer record (requires `Authorization: Bearer <token>`)
-- GET `/api/admin/farmers` – List farmers (admin only)
-- POST `/api/admin/farmers/:id/status` – Update status to `pending|certified|declined` (admin only)
+### Authentication (`/auth`)
 
-## Migrations
+| Method | Endpoint         | Description                        | Auth |
+| ------ | ---------------- | ---------------------------------- | ---- |
+| POST   | `/auth/register` | Register a new user (farmer/admin) | No   |
+| POST   | `/auth/login`    | Login, returns `{ token, role }`   | No   |
 
-- Create tables: run `npm run db:migrate`
-- Roll back all: run `npm run db:migrate:undo`
-- Seed roles and admin: run `npm run db:seed`
+### Users (`/users`)
+
+| Method | Endpoint         | Description              | Auth         |
+| ------ | ---------------- | ------------------------ | ------------ |
+| GET    | `/users/roles`   | Get all available roles  | No           |
+| GET    | `/users/profile` | Get current user profile | Bearer Token |
+| GET    | `/users/:id`     | Get user by ID           | Bearer Token |
+
+### Farmers (`/farmers`)
+
+| Method | Endpoint           | Description                            | Auth         |
+| ------ | ------------------ | -------------------------------------- | ------------ |
+| GET    | `/farmers/profile` | Get current farmer's record and status | Bearer Token |
+
+### Admin (`/admin`)
+
+| Method | Endpoint                    | Description                                                       | Auth       |
+| ------ | --------------------------- | ----------------------------------------------------------------- | ---------- |
+| GET    | `/admin/farmers`            | List all farmers with user details                                | Admin only |
+| GET    | `/admin/farmers/stats`      | Get farmer counts by status (total, pending, certified, declined) | Admin only |
+| POST   | `/admin/farmers/:id/status` | Update farmer status (`pending`, `certified`, `declined`)         | Admin only |
+
+## Database Commands
+
+```bash
+# Run migrations
+yarn db:migrate
+
+# Rollback all migrations
+yarn db:migrate:undo
+
+# Seed roles and admin user
+yarn db:seed
+
+# Undo all seeds
+yarn db:seed:undo
+```
+
+## CI/CD
+
+GitHub Actions workflow runs on push/PR to `main`:
+
+- **Frontend:** Lint + Build
+- **Backend:** Syntax check
+
+## Environment Variables
+
+### Backend (`server/.env`)
+
+```
+DB_HOST=localhost
+DB_USER=root
+DB_PASSWORD=yourpassword
+DB_NAME=farmers_portal
+JWT_SECRET=your_jwt_secret
+PORT=5001
+```
+
+### Frontend (`client/.env.local`)
+
+```
+NEXT_PUBLIC_API_URL=http://localhost:5001
+NEXT_PUBLIC_GOOGLE_MAPS_API_KEY=your_google_maps_api_key
+```

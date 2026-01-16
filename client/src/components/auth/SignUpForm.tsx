@@ -65,6 +65,11 @@ export default function SignUpForm() {
     resolver: zodResolver(signUpSchema),
   });
 
+  // Watch roleId at component level to avoid React Compiler memoization issues
+  const selectedRoleId = watch("roleId");
+  const selectedRole = roles.find((r) => r.id === selectedRoleId);
+  const isFarmerRole = selectedRole?.name === "Farmer";
+
   const onSubmit = async (data: SignUpFormData) => {
     setApiError("");
 
@@ -264,12 +269,7 @@ export default function SignUpForm() {
                 </div>
 
                 {/* <!-- Farm Information - Show only for Farmer role --> */}
-                {(() => {
-                  const selectedRoleId = watch("roleId");
-                  console.log("Selected Role ID:", selectedRoleId);
-                  const selectedRole = roles.find((r) => r.id === selectedRoleId);
-                  return selectedRole?.name === "Farmer";
-                })() && (
+                {isFarmerRole && (
                 <div className="border-t pt-5 mt-5">
                   <h3 className="font-semibold text-gray-800 dark:text-white/90 mb-4">
                     Farm Information

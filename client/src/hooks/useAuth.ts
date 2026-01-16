@@ -1,51 +1,53 @@
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { getAuthToken, deleteAuthToken } from "@/lib/cookies";
 import { getProfile } from "@/lib/auth";
+
+// Helper to safely get token (SSR-safe)
+const getInitialToken = (): string | null => {
+  if (typeof window === "undefined") {
+    return null;
+  }
+  return getAuthToken();
+};
 
 // Custom hook to check auth and redirect
 export function useAuth() {
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(true);
-  const [token, setToken] = useState<string | null>(null);
+  const [token] = useState<string | null>(getInitialToken);
   const [role, setRole] = useState<string | null>(null);
 
   useEffect(() => {
-    const storedToken = getAuthToken();
-    if (!storedToken) {
+    if (!token) {
       router.push("/signin");
-      setIsLoading(false);
-    } else {
-      setToken(storedToken);
-      // Fetch user profile to get role
-      getProfile()
-        .then((profile) => {
-          setRole(profile?.role?.name || null);
-        })
-        .catch(() => {
-          setRole(null);
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      return;
     }
-  }, [router]);
+    
+    // Fetch user profile to get role
+    getProfile()
+      .then((profile) => {
+        setRole(profile?.role?.name || null);
+      })
+      .catch(() => {
+        setRole(null);
+      })
+      .finally(() => {
+        setIsLoading(false);
+      });
+  }, [router, token]);
 
-  const logout = () => {
+  const logout = useCallback(() => {
     deleteAuthToken();
     router.push("/signin");
-  };
+  }, [router]);
 
   return { token, isLoading, logout, role };
 }
 
 // Hook to get auth header for API calls
 export function useAuthHeader() {
-  const [token, setToken] = useState<string | null>(null);
-
-  useEffect(() => {
-    setToken(getAuthToken());
-  }, []);
+  const [token] = useState<string | null>(getInitialToken);
 
   return {
     Authorization: token ? `Bearer ${token}` : "",

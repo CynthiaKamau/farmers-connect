@@ -198,43 +198,47 @@ const AppSidebar: React.FC = () => {
     </ul>
   );
 
+  // const isActive = (path: string) => path === pathname;
+  const isActive = useCallback((path: string) => path === pathname, [pathname]);
+
+  // Helper function to find which submenu contains the active path
+  const findActiveSubmenu = useCallback((): { type: "main" | "others"; index: number } | null => {
+    for (const menuType of ["main", "others"] as const) {
+      const items = menuType === "main" ? filteredNavItems : filteredOthersItems;
+      for (let index = 0; index < items.length; index++) {
+        const nav = items[index];
+        if (nav.subItems) {
+          for (const subItem of nav.subItems) {
+            if (subItem.path === pathname) {
+              return { type: menuType, index };
+            }
+          }
+        }
+      }
+    }
+    return null;
+  }, [pathname, filteredNavItems, filteredOthersItems]);
+
+  // Initialize openSubmenu based on current path
   const [openSubmenu, setOpenSubmenu] = useState<{
     type: "main" | "others";
     index: number;
-  } | null>(null);
+  } | null>(() => findActiveSubmenu());
+
+  // Track pathname to detect navigation and update submenu
+  const [trackedPathname, setTrackedPathname] = useState(pathname);
+  if (pathname !== trackedPathname) {
+    setTrackedPathname(pathname);
+    const active = findActiveSubmenu();
+    if (active !== null) {
+      setOpenSubmenu(active);
+    }
+  }
+
   const [subMenuHeight, setSubMenuHeight] = useState<Record<string, number>>(
     {}
   );
   const subMenuRefs = useRef<Record<string, HTMLDivElement | null>>({});
-
-  // const isActive = (path: string) => path === pathname;
-   const isActive = useCallback((path: string) => path === pathname, [pathname]);
-
-  useEffect(() => {
-    // Check if the current path matches any submenu item
-    let submenuMatched = false;
-    ["main", "others"].forEach((menuType) => {
-      const items = menuType === "main" ? filteredNavItems : filteredOthersItems;
-      items.forEach((nav, index) => {
-        if (nav.subItems) {
-          nav.subItems.forEach((subItem) => {
-            if (isActive(subItem.path)) {
-              setOpenSubmenu({
-                type: menuType as "main" | "others",
-                index,
-              });
-              submenuMatched = true;
-            }
-          });
-        }
-      });
-    });
-
-    // If no submenu item matches, close the open submenu
-    if (!submenuMatched) {
-      setOpenSubmenu(null);
-    }
-  }, [pathname, isActive, filteredNavItems, filteredOthersItems]);
 
   useEffect(() => {
     // Set the height of the submenu items when the submenu is opened

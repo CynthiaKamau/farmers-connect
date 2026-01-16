@@ -139,7 +139,7 @@ export default function SignInForm() {
           </form>
 
           <div className="mt-4 text-center text-sm">
-            <span className="text-gray-600">Don't have an account? </span>
+            <span className="text-gray-600">Don`t have an account? </span>
             <Link href="/signup" className="text-blue-600 hover:text-blue-500">
               Sign up
             </Link>

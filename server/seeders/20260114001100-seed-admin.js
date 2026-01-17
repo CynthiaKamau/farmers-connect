@@ -8,7 +8,7 @@ module.exports = {
     const adminPassword = process.env.ADMIN_PASSWORD || "admin123";
 
     const [roles] = await queryInterface.sequelize.query(
-      "SELECT id FROM roles WHERE name = 'admin' LIMIT 1"
+      "SELECT id FROM roles WHERE name = 'Admin' LIMIT 1"
     );
     if (!roles.length) {
       throw new Error("Admin role not found. Run role seeder first.");
